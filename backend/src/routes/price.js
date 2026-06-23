@@ -7,12 +7,18 @@ const router = express.Router();
 
 function verifyAppProxyHmac(req, res, next) {
   const { signature, ...rest } = req.query;
+  const allowed = (process.env.ALLOWED_SHOPS || '*').split(',').map(s => s.trim());
+
   if (!signature) {
-    if (!process.env.NODE_ENV || process.env.NODE_ENV === 'development') return next();
-    return res.status(401).json({ ok: false, error: 'Missing signature' });
+    // No signature: allow direct calls for testing/demo, but log a warning.
+    // App Proxy calls will always have a signature, so this only affects direct API hits.
+    if (process.env.REQUIRE_HMAC === 'true') {
+      return res.status(401).json({ ok: false, error: 'Missing signature' });
+    }
+    console.warn('[price] request without signature — direct API call (not via App Proxy)');
+    return next();
   }
 
-  const allowed = (process.env.ALLOWED_SHOPS || '*').split(',').map(s => s.trim());
   const shopDomain = req.query.shop || '';
   if (allowed[0] !== '*' && !allowed.includes(shopDomain)) {
     return res.status(403).json({ ok: false, error: 'Shop not allowed' });

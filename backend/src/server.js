@@ -67,9 +67,20 @@ app.use((err, req, res, next) => {
 
 async function start() {
   await db.init();
+
+  // Auto-seed on first boot if the rules table is empty.
+  const count = db.prepare('SELECT COUNT(*) as c FROM pricing_rules').get().c;
+  if (count === 0) {
+    console.log('[boot] pricing_rules is empty — running seed');
+    const seed = require('../scripts/seed-inline');
+    await seed();
+  }
+
+  // Render assigns a dynamic port via PORT env var. Only fall back to 3000 for local dev.
   const PORT = parseInt(process.env.PORT || '3000', 10);
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`ZIP Pricing API listening on port ${PORT}`);
+  const HOST = process.env.HOST || '0.0.0.0';
+  app.listen(PORT, HOST, () => {
+    console.log(`ZIP Pricing API listening on ${HOST}:${PORT}`);
     console.log(`  Health:    http://localhost:${PORT}/health`);
     console.log(`  Price API: http://localhost:${PORT}/api/price?zip=10001&product_id=gid://shopify/Product/123`);
   });
