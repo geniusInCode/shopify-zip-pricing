@@ -1,0 +1,9 @@
+{
+  "name": "ZIP Pricing Block",
+  "tagline": "Show location-based pricing on product pages",
+  "description": "Adds a ZIP code input to product pages that returns a localized price.",
+  "type": "theme_app_extension",
+  "categories": ["Pricing", "Conversion"],
+  "handle": "zip-pricing-block",
+  "version": "1.0.0"
+}

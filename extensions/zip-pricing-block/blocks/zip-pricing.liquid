@@ -1,0 +1,127 @@
+{% schema %}
+{
+  "name": "ZIP Pricing Lookup",
+  "target": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Heading",
+      "default": "Pricing for your area"
+    },
+    {
+      "type": "text",
+      "id": "subtitle",
+      "label": "Subheading",
+      "default": "Enter your ZIP code to see pricing for your location."
+    },
+    {
+      "type": "text",
+      "id": "button_label",
+      "label": "Button label",
+      "default": "Check Price"
+    },
+    {
+      "type": "color",
+      "id": "accent_color",
+      "label": "Accent color",
+      "default": "#1a1a1a"
+    },
+    {
+      "type": "color_background",
+      "id": "background",
+      "label": "Background"
+    },
+    {
+      "type": "select",
+      "id": "layout",
+      "label": "Layout",
+      "options": [
+        { "value": "inline", "label": "Inline (compact)" },
+        { "value": "stacked", "label": "Stacked (prominent)" }
+      ],
+      "default": "stacked"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_original",
+      "label": "Show original price when discount applies",
+      "default": true
+    }
+  ],
+  "presets": [
+    {
+      "name": "ZIP Pricing Lookup",
+      "category": "Pricing"
+    }
+  ]
+}
+{% endschema %}
+
+{% liquid
+  assign product_id = product.id | default: blank
+  assign variant_id = product.selected_or_first_available_variant.id | default: blank
+  assign base_price_cents = product.selected_or_first_available_variant.price | times: 100
+%}
+
+<div
+  class="zip-pricing-block"
+  data-layout="{{ block.settings.layout }}"
+  data-product-id="{{ product_id }}"
+  data-variant-id="{{ variant_id }}"
+  data-base-price-cents="{{ base_price_cents }}"
+  data-show-original="{{ block.settings.show_original }}"
+  style="
+    --zp-accent: {{ block.settings.accent_color }};
+    {% if block.settings.background != blank %}
+      --zp-bg: {{ block.settings.background }};
+    {% else %}
+      --zp-bg: transparent;
+    {% endif %}
+  "
+>
+  <div class="zp-card">
+    <div class="zp-header">
+      <h3 class="zp-title">{{ block.settings.title }}</h3>
+      <p class="zp-subtitle">{{ block.settings.subtitle }}</p>
+    </div>
+
+    <form class="zp-form" novalidate>
+      <label class="zp-label" for="zp-zip-input">
+        ZIP code
+      </label>
+      <div class="zp-input-row">
+        <input
+          type="text"
+          inputmode="numeric"
+          pattern="[0-9]{5}"
+          maxlength="5"
+          id="zp-zip-input"
+          class="zp-input"
+          placeholder="e.g. 75028"
+          aria-describedby="zp-status"
+          autocomplete="postal-code"
+        />
+        <button type="submit" class="zp-button">
+          <span class="zp-button-label">{{ block.settings.button_label }}</span>
+          <span class="zp-spinner" aria-hidden="true"></span>
+        </button>
+      </div>
+    </form>
+
+    <div class="zp-result" id="zp-status" role="status" aria-live="polite">
+      <div class="zp-result-empty">
+        <span class="zp-icon zp-icon-pin" aria-hidden="true">◐</span>
+        <span>Enter your ZIP to see localized pricing.</span>
+      </div>
+    </div>
+
+    <div class="zp-recent" hidden>
+      <span class="zp-recent-label">Recent:</span>
+      <div class="zp-recent-chips"></div>
+    </div>
+  </div>
+</div>
+
+<script src="{{ 'zip-pricing.js' | asset_url }}" defer></script>
+<link rel="stylesheet" href="{{ 'zip-pricing.css' | asset_url }}">
